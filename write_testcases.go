@@ -1,66 +1,77 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"regexp"
+	"text/template"
 )
 
-func getClassName() {
-
+type TestCase struct {
+	ClassName    string
+	FunctionName []string
 }
-func getPublicFunctions(line string) {
+
+func (t *TestCase) writeToFile() {
+
+	fmt.Println("\n Function")
+	fmt.Println("_______________________________________________________---")
+	for x := range t.FunctionName {
+		fmt.Println(t.FunctionName[x])
+	}
+	fmt.Println("_______________________________________________________---")
+	fmt.Println("\n Class")
+	fmt.Println("_______________________________________________________---")
+	fmt.Println(t.ClassName)
+}
+
+func (t *TestCase) templateParser(td string) string {
+	tem := template.Must(template.New("testcase").Parse(td))
+	fmt.Println(tem)
+	var pt bytes.Buffer
+	tem.Execute(&pt, t)
+	s := pt.String()
+	return s
+}
+
+func getClassName(line string, t *TestCase) {
+	re := regexp.MustCompile("export class+\\s[A-za-z]+\\s")
+	match := re.FindStringSubmatch(line)
+	if len(match) > 0 {
+		fmt.Println("----", match)
+		t.ClassName = match[0]
+	}
+}
+func getPublicFunctions(line string, t *TestCase) {
 	// matched, err := regexp.MatchString("public\\s*[a-zA-Z]+\\([^\\)]*\\)(\\.[^\\)]*\\))?:?", line)
 	re := regexp.MustCompile("public\\s*[a-zA-Z]+\\([^\\)]*\\)(\\.[^\\)]*\\))?:?")
 	match := re.FindStringSubmatch(line)
-	fmt.Println("********")
-	fmt.Println(line)
-	fmt.Println("********")
-	fmt.Println("______________")
-	fmt.Println(match)
-	fmt.Println("______________")
-
-	// if err == nil {
-	// 	fmt.Println(" _________ ", matched)
-	// } else {
-	// 	fmt.Println(" __######___ ", err)
-	// }
-
+	if len(match) > 0 {
+		fmt.Println("----", match)
+		t.FunctionName = append(t.FunctionName, match[0])
+	}
 }
 
 func ReadFile(path string) {
-	var file, err = os.OpenFile(path, os.O_RDWR, 0644)
-	if err != nil {
-		return
+	inFile, _ := os.Open(path)
+	defer inFile.Close()
+	scanner := bufio.NewScanner(inFile)
+	scanner.Split(bufio.ScanLines)
+	t := TestCase{}
+	t.FunctionName = make([]string, 0)
+	for scanner.Scan() {
+		getPublicFunctions(scanner.Text(), &t)
+		getClassName(scanner.Text(), &t)
 	}
-	defer file.Close()
+	t.writeToFile()
+	fmt.Println(t.templateParser(NewTemplate()))
 
-	// read file, line by line
-	var text = make([]byte, 1024)
-	for {
-		_, err := file.Read(text)
-		// getPublicFunctions(string(line))
-		// break if finally arrived at end of file
-		if err == io.EOF {
-			break
-		}
-
-		// break if error occured
-		if err != nil && err != io.EOF {
-			if err != err {
-				break
-			}
-		}
-	}
-
-	fmt.Println("==> done reading from file")
-	getPublicFunctions(string(text))
-	// fmt.Println(string(text))
 }
 
-func WriteTestCases(read_file_from, write_file_to string) {
-	fmt.Println("Read test cases to ", read_file_from)
-	ReadFile(read_file_from)
-	fmt.Println("writing test cases to ", write_file_to)
+func WriteTestCases(readFileFrom, writeFileTo string) {
+	fmt.Println("Read test cases to ", readFileFrom)
+	ReadFile(readFileFrom)
+	fmt.Println("writing test cases to ", writeFileTo)
 }

@@ -21,7 +21,7 @@ export class CustomerAgreementsBaseComponent implements OnInit {
   constructor(private store : Store<ICustomerAgreementsState>,
           private customerAgreementsActions : CustomerAgreementsActions) {}
   
-  public ngOnInit(){
+  public ngOnInit(abc : string, b:string){
       this.isLoading$ = this.store.select(customerAgreementsQueries.isLoading);
   }
   
