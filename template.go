@@ -5,10 +5,12 @@ func FunctionTemplate() string {
 }
 
 func NewTemplate() string {
-	template := `import { Component, OnInit } from "@angular/core";
+	template := `
+		{{$className := .ClassName}}
+		import { Component, OnInit } from "@angular/core";
 		import { Store } from "@ngrx/store";
 		import { CustomerAgreementsActions } from "../../domain/actions";
-		import { {{.ClassName}} } from "./base-contract.component";
+		import { {{$className}} } from "./base-contract.component";
 		
 		describe("CustomerAgreementsBaseComponent", () => {
 			let comp: BaseContractComponent;
@@ -19,10 +21,10 @@ func NewTemplate() string {
 				comp = new {{.ClassName}}(store, actions);
 			});
 			{{ range $key, $value := .FunctionName }}
-				it("{{.ClassName}} should have {{$value}} function defined ", () => {
+				it("{{$className}} should have {{$value}} function defined ", () => {
 					expect(comp.{{$value}}).toBeDefined();
 				});
-				it("  should have {{$value}} defined as function", () => {
+				it("{{$className}} should have {{$value}} defined as function", () => {
 					expect(typeof comp.{{$value}}).toBe("function");
 				});
 		 	{{ end }}
